@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 class CPU
 {
     public const uint memorySize = 4096u;
@@ -13,7 +14,7 @@ class CPU
     public byte soundTimer;
     public byte[] register;
     public byte[] ram;
-    public byte[] keyPad = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+    public bool[] keysPressed;
     public byte[,] display;
     public ushort opcode;
     public ushort indexRegister;
@@ -40,6 +41,23 @@ class CPU
 
     public CPU()
     {
+        
+        InitizalizeCPU();
+        
+
+        OpenROM();
+
+        
+    }
+
+    public void InitizalizeCPU() {
+
+        opcode = FetchOpcode();
+
+        display = new byte[maxWidth, maxHeight];
+
+        keysPressed = new bool[] { false };
+
         register = new byte[registerSize];
 
         ram = new byte[memorySize];
@@ -55,23 +73,106 @@ class CPU
         soundTimer = 0;
 
         LoadSprite();
+    }
 
-        OpenROM();
+    public void CycleCPU(ALU alu) {
 
         opcode = FetchOpcode();
 
-        display = new byte[maxWidth, maxHeight];
+        DecodeExecuteOpcode(alu);
+
+        DecrementTimers();
     }
 
     public ushort FetchOpcode()
     {
         opcode = (ushort)((ram[programCounter] * 0x100u) | ram[programCounter + 0x1u]);
 
-        Console.WriteLine($"ram[{programCounter}] -> {ram[programCounter], 0:X2}, ram[{programCounter + 1}] -> {ram[programCounter + 1], 0:X2} => 0x{opcode, 0:X4}");   //debug
+        Console.WriteLine($"ram[{programCounter}] -> {ram[programCounter],0:X2}, ram[{programCounter + 1}] -> {ram[programCounter + 1],0:X2} => 0x{opcode,0:X4}");   //debug
 
         programCounter += 2;
 
         return opcode;
+    }
+
+    public void DecodeExecuteOpcode(ALU alu)
+    {
+        switch (opcode & 0xF000u >> 12)  //MSB
+        {
+            case 0x0:
+                switch (opcode & 0x0FFFu)
+                {
+                    case 0x0E0: alu.Opcode00E0(); break;
+                    case 0x0EE: alu.Opcode00EE(); break;
+                    default: alu.Opcode0NNN(); break;
+                }
+                break;
+            case 0x1: alu.Opcode1NNN(); break;
+            case 0x2: alu.Opcode2NNN(); break;
+            case 0x3: alu.Opcode3XKK(); break;
+            case 0x4: alu.Opcode4XKK(); break;
+            case 0x5: alu.Opcode5XY0(); break;
+            case 0x6: alu.Opcode6XKK(); break;
+            case 0x7: alu.Opcode7XKK(); break;
+            case 0x8:
+                switch (opcode & 0x000Fu)
+                {
+                    case 0x0: alu.Opcode8XY0(); break;
+                    case 0x1: alu.Opcode8XY1(); break;
+                    case 0x2: alu.Opcode8XY2(); break;
+                    case 0x3: alu.Opcode8XY3(); break;
+                    case 0x4: alu.Opcode8XY4(); break;
+                    case 0x5: alu.Opcode8XY5(); break;
+                    case 0x6: alu.Opcode8XY6(); break;
+                    case 0x7: alu.Opcode8XY7(); break;
+                    case 0xE: alu.Opcode8XYE(); break;
+                    default: break;
+                }
+                break;
+            case 0x9: alu.Opcode9XY0(); break;
+            case 0xA: alu.OpcodeANNN(); break;
+            case 0xB: alu.OpcodeBNNN(); break;
+            case 0xC: alu.OpcodeCXKK(); break;
+            case 0xD: alu.OpcodeDXYN(); break;
+            case 0xE:
+                switch (opcode & 0x00FFu)
+                {
+                    case 0x9E: alu.OpcodeEX9E(); break;
+                    case 0xA1: alu.OpcodeEXA1(); break;
+                    default: break;
+                }
+                break;
+            case 0xF:
+                switch (opcode & 0x00FFu)
+                {
+                    case 0x07: alu.OpcodeFx07(); break;
+                    case 0x0A: alu.OpcodeFx0A(); break;
+                    case 0x15: alu.OpcodeFx15(); break;
+                    case 0x18: alu.OpcodeFx18(); break;
+                    case 0x1E: alu.OpcodeFx1E(); break;
+                    case 0x29: alu.OpcodeFX29(); break;
+                    case 0x33: alu.OpcodeFX33(); break;
+                    case 0x55: alu.OpcodeFX55(); break;
+                    case 0x65: alu.OpcodeFx65(); break;
+                    default: break;
+                }
+                break;
+            default: break;
+        }
+    }
+
+    public void DecrementTimers()
+    {
+
+        if (delayTimer > 0)
+        {
+            delayTimer--;
+        }
+
+        if (soundTimer > 0)
+        {
+            soundTimer--;
+        }
     }
 
     public void LoadSprite()
@@ -79,6 +180,16 @@ class CPU
         for (int i = 0; i < sprite.Length; i++)
         {
             ram[spriteStartAddress + i] = sprite[i];
+        }
+    }
+
+    public void InitizalizeDisplay() {
+
+        for (int row = 0; row < maxHeight; row++) {
+
+            for (int col = 0; col < maxWidth; col++) {
+                
+            }
         }
     }
 

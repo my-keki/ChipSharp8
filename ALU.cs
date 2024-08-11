@@ -47,13 +47,13 @@ class ALU
 
     public void Opcode0NNN()
     {
-
+        //DO NOTHING
     }
 
     public void Opcode00E0()
     {
 
-
+        Array.Clear(cpu.display);
     }
 
     public void Opcode00EE()
@@ -255,9 +255,11 @@ class ALU
     public void OpcodeDXYN()    //TODO
     {
 
-        byte numOfBytes = (byte)(cpu.opcode & nibble);
+        byte numOfBytes = (byte)(cpu.opcode & GetNibble());
 
-        byte msb = 0x80;
+        byte mostSignificantBit = 0x80;
+
+        cpu.register[0xFu] = 0;
 
         for (byte row = 0; row < numOfBytes; row++)
         {
@@ -266,7 +268,21 @@ class ALU
             for (byte col = 0; col < 0x8; col++)
             {
 
-                cpu.display[col + GetX(), row + GetY()] = (byte)(writeBuffer & (msb >> col));
+                byte pixel = (byte)(writeBuffer & (mostSignificantBit >> col));
+
+                if (cpu.display[col + GetX(), row + GetY()] == 0)
+                {
+
+                    cpu.display[col + GetX(), row + GetY()] = pixel;
+                }
+                else
+                {
+                    cpu.register[0xFu] = 1;
+                    
+                    cpu.display[col + GetX(), row + GetY()] ^= pixel;
+                }
+
+
             }
         }
     }
@@ -274,12 +290,20 @@ class ALU
     public void OpcodeEX9E()
     {
 
-        //TODO
+        if (cpu.keysPressed[cpu.register[GetX()]])
+        {
+
+            cpu.programCounter += 2;
+        }
     }
 
     public void OpcodeEXA1()
     {
-        //TODO
+        if (!cpu.keysPressed[cpu.register[GetX()]])
+        {
+
+            cpu.programCounter += 2;
+        }
     }
 
     public void OpcodeFx07()
@@ -290,7 +314,75 @@ class ALU
 
     public void OpcodeFx0A()
     {
-        //TODO
+
+        if (cpu.keysPressed[0])
+        {
+            cpu.register[GetX()] = 0;
+        }
+        else if (cpu.keysPressed[1])
+        {
+            cpu.register[GetX()] = 1;
+        }
+        else if (cpu.keysPressed[2])
+        {
+            cpu.register[GetX()] = 2;
+        }
+        else if (cpu.keysPressed[3])
+        {
+            cpu.register[GetX()] = 3;
+        }
+        else if (cpu.keysPressed[4])
+        {
+            cpu.register[GetX()] = 4;
+        }
+        else if (cpu.keysPressed[5])
+        {
+            cpu.register[GetX()] = 5;
+        }
+        else if (cpu.keysPressed[6])
+        {
+            cpu.register[GetX()] = 6;
+        }
+        else if (cpu.keysPressed[7])
+        {
+            cpu.register[GetX()] = 7;
+        }
+        else if (cpu.keysPressed[8])
+        {
+            cpu.register[GetX()] = 8;
+        }
+        else if (cpu.keysPressed[9])
+        {
+            cpu.register[GetX()] = 9;
+        }
+        else if (cpu.keysPressed[10])
+        {
+            cpu.register[GetX()] = 10;
+        }
+        else if (cpu.keysPressed[11])
+        {
+            cpu.register[GetX()] = 11;
+        }
+        else if (cpu.keysPressed[12])
+        {
+            cpu.register[GetX()] = 12;
+        }
+        else if (cpu.keysPressed[13])
+        {
+            cpu.register[GetX()] = 13;
+        }
+        else if (cpu.keysPressed[14])
+        {
+            cpu.register[GetX()] = 14;
+        }
+        else if (cpu.keysPressed[15])
+        {
+            cpu.register[GetX()] = 15;
+        }
+        else
+        {
+            cpu.programCounter -= 2;
+        }
     }
 
     public void OpcodeFx15()
