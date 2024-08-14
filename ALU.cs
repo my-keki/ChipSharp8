@@ -12,11 +12,15 @@ class ALU
     public ALU(CPU cpu)
     {
         this.cpu = cpu;
-        //first-time initialization
+   
         nibble = (byte)(cpu.opcode & 0x000Fu);
+
         x = (byte)((cpu.opcode & 0x0F00u) / 0x100u);
+
         y = (byte)((cpu.opcode & 0x00F0u) / 0x10u);
+
         lowByte = (byte)(cpu.opcode & 0x00FFu);
+
         Console.WriteLine($"address -> 0x{address,0:X3}, nibble -> 0x{nibble,0:X1}, x -> 0x{x,0:X1}, y -> 0x{y,0:X1}, lowByte -> 0x{lowByte,0:X2}");
     }
 
@@ -422,9 +426,7 @@ class ALU
     {
         for (byte i = 0; i <= cpu.register[GetX()]; i++)
         {
-
             cpu.ram[cpu.indexRegister + i] = cpu.register[i];
-
         }
     }
 
@@ -432,9 +434,7 @@ class ALU
     {
         for (byte i = 0; i <= cpu.register[GetX()]; i++)
         {
-
             cpu.register[i] = cpu.ram[cpu.indexRegister + i];
-
         }
     }
 }

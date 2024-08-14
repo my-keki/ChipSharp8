@@ -1,7 +1,8 @@
-﻿// See https://aka.ms/new-console-template for more information
-CPU cpu = new CPU();
-
-ALU alu = new ALU(cpu);
-
-alu.Opcode8XY4();
-Console.WriteLine(cpu.register[0xF]);
+﻿public static class Program
+{
+    public static void Main()
+    {
+        using (var game = new Renderer())
+            game.Run();
+    }
+}
