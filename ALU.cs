@@ -62,8 +62,7 @@ class ALU
 
     public void Opcode00EE()
     {
-
-        cpu.programCounter = cpu.stack[cpu.stackPointer--];
+        cpu.programCounter = cpu.stack[--cpu.stackPointer];
     }
 
     public void Opcode1NNN()
@@ -276,7 +275,6 @@ class ALU
 
                 if (cpu.display[col + GetX(), row + GetY()] == 0)
                 {
-
                     cpu.display[col + GetX(), row + GetY()] = pixel;
                 }
                 else
@@ -305,7 +303,6 @@ class ALU
     {
         if (!cpu.keysPressed[cpu.register[GetX()]])
         {
-
             cpu.programCounter += 2;
         }
     }
@@ -409,7 +406,7 @@ class ALU
     public void OpcodeFX29()
     {
 
-        cpu.indexRegister = (ushort)(CPU.spriteStartAddress + 5 * cpu.register[GetX()]);
+        cpu.indexRegister = (ushort)((CPU.spriteStartAddress + 5) * cpu.register[GetX()]);
     }
 
     public void OpcodeFX33()
@@ -424,7 +421,7 @@ class ALU
 
     public void OpcodeFX55()
     {
-        for (byte i = 0; i <= cpu.register[GetX()]; i++)
+        for (byte i = 0; i <= GetX() - 1; i++)
         {
             cpu.ram[cpu.indexRegister + i] = cpu.register[i];
         }
@@ -432,7 +429,7 @@ class ALU
 
     public void OpcodeFx65()
     {
-        for (byte i = 0; i <= cpu.register[GetX()]; i++)
+        for (byte i = 0; i <= GetX() - 1; i++)
         {
             cpu.register[i] = cpu.ram[cpu.indexRegister + i];
         }

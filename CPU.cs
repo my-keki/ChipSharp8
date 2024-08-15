@@ -101,7 +101,7 @@ class CPU
     {
         opcode = (ushort)((ram[programCounter] * 0x100u) | ram[programCounter + 0x1u]);
 
-        Console.WriteLine($"ram[{programCounter}] -> {ram[programCounter],0:X2}, ram[{programCounter + 1}] -> {ram[programCounter + 1],0:X2} => 0x{opcode,0:X4}");   //debug
+        //Console.WriteLine($"ram[{programCounter}] -> {ram[programCounter],0:X2}, ram[{programCounter + 1}] -> {ram[programCounter + 1],0:X2} => 0x{opcode,0:X4}");   //debug
 
         programCounter += 2;
 
@@ -110,7 +110,7 @@ class CPU
 
     public void DecodeExecuteOpcode(ALU alu)
     {
-        switch (opcode & 0xF000u >> 12)  //MSB
+        switch ((opcode & 0xF000u) >> 12)  //MSB
         {
             case 0x0:
 
@@ -253,7 +253,7 @@ class CPU
 
     public void OpenROM()
     {
-        const string path = @".\Space Invaders.ch8";
+        const string path = @".\test_opcode.ch8";
 
         if (!File.Exists(path))
         {
@@ -272,7 +272,7 @@ class CPU
                     for (int i = 0; i < (int)fs.Length; i++)
                     {
                         ram[programStartAddress + i] = buffer[i];
-                        //Console.WriteLine($"ram[{programStartAddress + i}] -> " + $"0x{buffer[i], 0:X2}");  //debug
+                        Console.WriteLine($"ram[{programStartAddress + i}] -> " + $"0x{buffer[i], 0:X2}");  //debug
                     }                 
                     fs.Close();
                 };
