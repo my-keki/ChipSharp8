@@ -1,5 +1,8 @@
 using System;
 using System.IO;
+using System.Net.Http.Headers;
+using Microsoft.Xna.Framework.Input;
+
 namespace ChipSharp8.ChipSharp8Core
 {
     public class CPU
@@ -16,7 +19,6 @@ namespace ChipSharp8.ChipSharp8Core
         public byte soundTimer;
         public byte[] register;
         public byte[] ram;
-        public bool[] keysPressed;
         public byte[,] display;
         public ushort opcode;
         public ushort indexRegister;
@@ -56,6 +58,7 @@ namespace ChipSharp8.ChipSharp8Core
         
 	    0xF0, 0x80, 0xF0, 0x80, 0x80  // F
         };
+        public bool[] keyboard;
         public CPU()
         {
             InitizalizeCPU();
@@ -66,12 +69,9 @@ namespace ChipSharp8.ChipSharp8Core
         }
         public void InitizalizeCPU()
         {
-
             opcode = 0;
 
             display = new byte[maxWidth, maxHeight];
-
-            keysPressed = new bool[] { false };
 
             register = new byte[registerSize];
 
@@ -86,6 +86,8 @@ namespace ChipSharp8.ChipSharp8Core
             delayTimer = 0;
 
             soundTimer = 0;
+
+            keyboard = new bool[registerSize];
         }
         public void CycleCPU(ALU alu)
         {

@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using Microsoft.Xna.Framework.Input;
+
 namespace ChipSharp8.ChipSharp8Core
 {
     public class ALU
@@ -11,7 +14,7 @@ namespace ChipSharp8.ChipSharp8Core
         private static Random rand = new Random();
         public ALU()
         {
-            
+
         }
         public ALU(CPU cpu)
         {
@@ -60,7 +63,6 @@ namespace ChipSharp8.ChipSharp8Core
 
         public void Opcode00E0()
         {
-
             Array.Clear(cpu.display);
         }
 
@@ -71,13 +73,11 @@ namespace ChipSharp8.ChipSharp8Core
 
         public void Opcode1NNN()
         {
-
             cpu.programCounter = GetAddress();
         }
 
         public void Opcode2NNN()
         {
-
             cpu.stack[cpu.stackPointer++] = cpu.programCounter;
 
             cpu.programCounter = GetAddress();
@@ -85,10 +85,8 @@ namespace ChipSharp8.ChipSharp8Core
 
         public void Opcode3XKK()
         {
-
             if (cpu.register[GetX()] == GetLowByte())
             {
-
                 cpu.programCounter += 2;
             }
         }
@@ -98,7 +96,6 @@ namespace ChipSharp8.ChipSharp8Core
 
             if (cpu.register[GetX()] != GetLowByte())
             {
-
                 cpu.programCounter += 2;
             }
         }
@@ -108,63 +105,53 @@ namespace ChipSharp8.ChipSharp8Core
 
             if (cpu.register[GetX()] == cpu.register[GetY()])
             {
-
                 cpu.programCounter += 2;
             }
         }
 
         public void Opcode6XKK()
         {
-
             cpu.register[GetX()] = GetLowByte();
         }
 
         public void Opcode7XKK()
         {
-
             cpu.register[GetX()] += GetLowByte();
         }
 
         public void Opcode8XY0()
         {
-
             cpu.register[GetX()] = cpu.register[GetY()];
         }
 
         public void Opcode8XY1()
         {
-
             cpu.register[GetX()] |= cpu.register[GetY()];
         }
 
         public void Opcode8XY2()
         {
-
             cpu.register[GetX()] &= cpu.register[GetY()];
         }
 
         public void Opcode8XY3()
         {
-
             cpu.register[GetX()] ^= cpu.register[GetY()];
         }
 
         public void Opcode8XY4()
         {
-
             ushort result = (ushort)(cpu.register[GetX()] + cpu.register[GetY()]);
 
             if (result > 255u)
             {
-
                 cpu.register[0xFu] = 1;
-
             }
             else
             {
-
                 cpu.register[0xFu] = 0;
             }
+            cpu.register[GetX()] = (byte)result;
         }
 
         public void Opcode8XY5()
@@ -172,16 +159,12 @@ namespace ChipSharp8.ChipSharp8Core
 
             if (cpu.register[GetX()] > cpu.register[GetY()])
             {
-
                 cpu.register[0xFu] = 1;
-
             }
             else
             {
-
                 cpu.register[0xFu] = 0;
             }
-
             cpu.register[GetX()] -= cpu.register[GetY()];
         }
 
@@ -190,13 +173,10 @@ namespace ChipSharp8.ChipSharp8Core
 
             if ((cpu.register[GetX()] & 0x1u) == 0x1u)
             {
-
                 cpu.register[0xFu] = 1;
-
             }
             else
             {
-
                 cpu.register[0xFu] = 0;
             }
 
@@ -209,19 +189,16 @@ namespace ChipSharp8.ChipSharp8Core
             if (cpu.register[GetY()] > cpu.register[GetX()])
             {
                 cpu.register[0xFu] = 1;
-
             }
             else
             {
                 cpu.register[0xFu] = 0;
             }
-
             cpu.register[GetX()] = (byte)(cpu.register[GetY()] - cpu.register[GetY()]);
         }
 
         public void Opcode8XYE()
         {
-
             if ((cpu.register[GetX()] & 0x80u) == 0x80u)
             {
                 cpu.register[0xFu] = 1;
@@ -231,7 +208,6 @@ namespace ChipSharp8.ChipSharp8Core
             {
                 cpu.register[0xFu] = 0;
             }
-
             cpu.register[GetX()] *= 2;
         }
 
@@ -239,7 +215,6 @@ namespace ChipSharp8.ChipSharp8Core
         {
             if (cpu.register[GetX()] != cpu.register[GetY()])
             {
-
                 cpu.programCounter += 2;
             }
         }
@@ -261,16 +236,18 @@ namespace ChipSharp8.ChipSharp8Core
 
         public void OpcodeDXYN()    //TODO
         {
+            //debug
+            Console.WriteLine($"{cpu.register[GetX()]}, {cpu.register[GetY()]}");
 
             byte numOfBytes = (byte)(cpu.opcode & GetNibble());
 
             byte mostSignificantBit = 0x80;
 
-            cpu.register[0xFu] = 0;
-
             int posX = cpu.register[GetX()] % 64;
 
             int posY = cpu.register[GetY()] % 32;
+
+            cpu.register[0xFu] = 0;
 
             for (byte row = 0; row < numOfBytes; row++)
             {
@@ -278,117 +255,83 @@ namespace ChipSharp8.ChipSharp8Core
 
                 for (byte col = 0; col < 0x8; col++)
                 {
-
                     byte writePixel = (byte)(writeBuffer & (mostSignificantBit >> col));
 
-                    byte displayPixel = cpu.display[col + posX, row + posY];
+                    int displayX = col + posX;
 
-                    if (displayPixel == 0)
-                    { 
-                        cpu.display[col + posX, row + posY] = writePixel;
+                    int displayY = row + posY;
 
-                    } else 
+                    if (cpu.opcode == 0xD671)
                     {
-                        cpu.register[0xFu] = 1;
+                        Console.WriteLine($"row = {row}, posX = {posX}, col = {col}, posY = {posY}");
+                    }
 
-                        cpu.display[col + posX, row + posY] ^= writePixel;
-                    }          
+                    if (displayX < CPU.maxWidth && displayY < CPU.maxHeight)
+                    {
+                        byte displayPixel = cpu.display[displayX, displayY];
+
+                        if (displayPixel == 0)
+                        {
+                            cpu.display[displayX, displayY] = writePixel;
+                        }
+                        else
+                        {
+                            cpu.register[0xFu] = 1;
+
+                            cpu.display[displayX, displayY] ^= writePixel;
+                        }
+                    }
                 }
             }
         }
 
         public void OpcodeEX9E()
         {
-
-            if (cpu.keysPressed[cpu.register[GetX()]])
+            KeyboardState state = Keyboard.GetState();
+            foreach (var key in Renderer._keyboard)
             {
-
-                cpu.programCounter += 2;
+                if(state.IsKeyDown(key.Key) && cpu.keyboard[key.Value])
+                {
+                    cpu.programCounter += 2;
+                    break;
+                }
             }
         }
 
         public void OpcodeEXA1()
         {
-            if (!cpu.keysPressed[cpu.register[GetX()]])
+            KeyboardState state = Keyboard.GetState();
+
+            foreach (var key in Renderer._keyboard)
             {
-                cpu.programCounter += 2;
+                if(!cpu.keyboard[key.Value] || !cpu.keyboard[key.Value])
+                {
+                    cpu.programCounter += 2;
+                    break;
+                }
             }
         }
 
         public void OpcodeFx07()
         {
-
             cpu.register[GetX()] = cpu.delayTimer;
         }
 
         public void OpcodeFx0A()
         {
+            bool isKeyPressed = false;
 
-            if (cpu.keysPressed[0])
+            for (byte i = 0; i < CPU.registerSize; i++)
             {
-                cpu.register[GetX()] = 0;
+                if (cpu.keyboard[i])
+                {
+                    cpu.register[GetX()] = i;
+                    isKeyPressed = true;
+                    break;
+                }
             }
-            else if (cpu.keysPressed[1])
-            {
-                cpu.register[GetX()] = 1;
-            }
-            else if (cpu.keysPressed[2])
-            {
-                cpu.register[GetX()] = 2;
-            }
-            else if (cpu.keysPressed[3])
-            {
-                cpu.register[GetX()] = 3;
-            }
-            else if (cpu.keysPressed[4])
-            {
-                cpu.register[GetX()] = 4;
-            }
-            else if (cpu.keysPressed[5])
-            {
-                cpu.register[GetX()] = 5;
-            }
-            else if (cpu.keysPressed[6])
-            {
-                cpu.register[GetX()] = 6;
-            }
-            else if (cpu.keysPressed[7])
-            {
-                cpu.register[GetX()] = 7;
-            }
-            else if (cpu.keysPressed[8])
-            {
-                cpu.register[GetX()] = 8;
-            }
-            else if (cpu.keysPressed[9])
-            {
-                cpu.register[GetX()] = 9;
-            }
-            else if (cpu.keysPressed[10])
-            {
-                cpu.register[GetX()] = 10;
-            }
-            else if (cpu.keysPressed[11])
-            {
-                cpu.register[GetX()] = 11;
-            }
-            else if (cpu.keysPressed[12])
-            {
-                cpu.register[GetX()] = 12;
-            }
-            else if (cpu.keysPressed[13])
-            {
-                cpu.register[GetX()] = 13;
-            }
-            else if (cpu.keysPressed[14])
-            {
-                cpu.register[GetX()] = 14;
-            }
-            else if (cpu.keysPressed[15])
-            {
-                cpu.register[GetX()] = 15;
-            }
-            else
+
+            if (!isKeyPressed)
             {
                 cpu.programCounter -= 2;
             }
@@ -396,7 +339,6 @@ namespace ChipSharp8.ChipSharp8Core
 
         public void OpcodeFx15()
         {
-
             cpu.delayTimer = cpu.register[GetX()];
         }
 
@@ -407,19 +349,16 @@ namespace ChipSharp8.ChipSharp8Core
 
         public void OpcodeFx1E()
         {
-
             cpu.indexRegister += cpu.register[GetX()];
         }
 
         public void OpcodeFX29()
         {
-
             cpu.indexRegister = (ushort)((CPU.spriteStartAddress + 5) * cpu.register[GetX()]);
         }
 
         public void OpcodeFX33()
         {
-
             cpu.ram[cpu.indexRegister + 2] = (byte)(cpu.register[GetX()] % 10); //lsb
 
             cpu.ram[cpu.indexRegister + 1] = (byte)(cpu.register[GetX()] % 100 / 10);   //middle
@@ -429,7 +368,7 @@ namespace ChipSharp8.ChipSharp8Core
 
         public void OpcodeFX55()
         {
-            for (byte i = 0; i <= GetX() - 1; i++)
+            for (int i = 0; i <= GetX(); i++)
             {
                 cpu.ram[cpu.indexRegister + i] = cpu.register[i];
             }
@@ -437,7 +376,7 @@ namespace ChipSharp8.ChipSharp8Core
 
         public void OpcodeFx65()
         {
-            for (byte i = 0; i <= GetX() - 1; i++)
+            for (int i = 0; i <= GetX(); i++)
             {
                 cpu.register[i] = cpu.ram[cpu.indexRegister + i];
             }

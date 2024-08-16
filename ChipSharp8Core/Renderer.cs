@@ -1,5 +1,7 @@
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace ChipSharp8.ChipSharp8Core
 {
@@ -13,6 +15,7 @@ namespace ChipSharp8.ChipSharp8Core
         private int _scaledY;
         private CPU _cpu;
         private ALU _alu;
+        public static Dictionary<Keys, byte> _keyboard;
 
         public Renderer()
         {
@@ -30,14 +33,13 @@ namespace ChipSharp8.ChipSharp8Core
 
             IsFixedTimeStep = true;
 
-            TargetElapsedTime = TimeSpan.FromMilliseconds(33.33);
+            TargetElapsedTime = TimeSpan.FromMilliseconds(3.33);
 
             IsMouseVisible = true;
         }
 
         protected override void Initialize()
         {
-
             _scaledY = (int)(_graphics.PreferredBackBufferHeight / CPU.maxHeight);
 
             _scaledX = (int)(_graphics.PreferredBackBufferWidth / CPU.maxWidth);
@@ -47,6 +49,25 @@ namespace ChipSharp8.ChipSharp8Core
             _cpu = new();
 
             _alu = new(_cpu);
+
+            _keyboard = new Dictionary<Keys, byte>() {
+                { Keys.D1, 1 },
+                { Keys.D2, 2 },
+                { Keys.D3, 3 },
+                { Keys.D4, 4 },
+                { Keys.Q, 5 },
+                { Keys.W, 6 },
+                { Keys.E, 7 },
+                { Keys.R, 8 },
+                { Keys.A, 9 },
+                { Keys.S, 0 },
+                { Keys.D, 10 },
+                { Keys.F, 11 },
+                { Keys.Z, 12 },
+                { Keys.X, 13 },
+                { Keys.C, 14 },
+                { Keys.V, 15 }
+            };
 
             GraphicsDevice.Clear(Color.Black);
 
@@ -72,7 +93,17 @@ namespace ChipSharp8.ChipSharp8Core
         protected override void Update(GameTime gameTime)
         {   
             _cpu.CycleCPU(_alu);
-        
+
+            KeyboardState keyState = Keyboard.GetState();
+
+            foreach (var key in _keyboard)
+            {
+                if (keyState.IsKeyDown(key.Key)) {
+
+                    _cpu.keyboard[key.Value] = true;
+                }
+            }
+            
             base.Update(gameTime);
         }
 
@@ -89,7 +120,6 @@ namespace ChipSharp8.ChipSharp8Core
 
         private void DrawScreen()
         {
-            // Loop through rows and columns to draw squares
             for (int y = 0; y < CPU.maxHeight; y++)
             {
                 for (int x = 0; x < CPU.maxWidth; x++)
