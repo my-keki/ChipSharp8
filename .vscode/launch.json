@@ -10,7 +10,7 @@
             "name": "Launch",
             "type": "coreclr",
             "request": "launch",
-            "program": "${workspaceFolder}\\bin\\Debug\\net8.0\\ChipSharp8.dll"
+            "program": "${workspaceFolder}\\ChipSharp8Core\\bin\\Debug\\net8.0\\ChipSharp8.dll"
         }
     ]
 }
