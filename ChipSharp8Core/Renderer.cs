@@ -1,4 +1,3 @@
-using System.Security.Cryptography.X509Certificates;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -20,34 +19,24 @@ namespace ChipSharp8.ChipSharp8Core
         public Renderer()
         {
             _graphics = new GraphicsDeviceManager(this);
-
             _graphicsAdapter = new GraphicsAdapter();
-
             _graphics.PreferredBackBufferHeight = _graphicsAdapter.CurrentDisplayMode.Height / 2;
-
             _graphics.PreferredBackBufferWidth = _graphicsAdapter.CurrentDisplayMode.Width / 2;
-
             _graphics.IsFullScreen = false;
-
             Content.RootDirectory = "Content";
-
             IsFixedTimeStep = true;
-
-            TargetElapsedTime = TimeSpan.FromMilliseconds(3.33);
-
+            TargetElapsedTime = TimeSpan.FromSeconds(1.0 / 500.0);  //500fps
             IsMouseVisible = true;
         }
 
         protected override void Initialize()
         {
             _scaledY = (int)(_graphics.PreferredBackBufferHeight / CPU.maxHeight);
-
             _scaledX = (int)(_graphics.PreferredBackBufferWidth / CPU.maxWidth);
 
             Console.WriteLine($"{_scaledX}, {_scaledY}");
 
             _cpu = new();
-
             _alu = new(_cpu);
 
             _keyboard = new Dictionary<Keys, byte>() {
@@ -70,14 +59,12 @@ namespace ChipSharp8.ChipSharp8Core
             };
 
             GraphicsDevice.Clear(Color.Black);
-
             base.Initialize();
         }
 
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-
             _squarePixel = new Texture2D(GraphicsDevice, _scaledX, _scaledY);
 
             Color[] colorData = new Color[_scaledX * _scaledY];
@@ -86,7 +73,6 @@ namespace ChipSharp8.ChipSharp8Core
             {
                 colorData[i] = Color.White;
             }
-
             _squarePixel.SetData(colorData);
         }
 
@@ -101,20 +87,18 @@ namespace ChipSharp8.ChipSharp8Core
                 if (keyState.IsKeyDown(key.Key)) {
 
                     _cpu.keyboard[key.Value] = true;
+
+                    Console.WriteLine($"Debug: {key.Key} down -> _cpu.keyboard[0x{key.Value, 0:X2}] {_cpu.keyboard[key.Value]}");
                 }
             }
-            
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
             _spriteBatch.Begin();
-
             DrawScreen();
-
             _spriteBatch.End();
-
             base.Draw(gameTime);
         }
 
@@ -128,7 +112,7 @@ namespace ChipSharp8.ChipSharp8Core
 
                     if (_cpu.display[x, y] > 0)
                     {
-                        _spriteBatch.Draw(_squarePixel, position, Color.White);
+                        _spriteBatch.Draw(_squarePixel, position, Color.Aquamarine);
                     }
                     else
                     {

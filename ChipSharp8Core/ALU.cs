@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Microsoft.Xna.Framework.Input;
 
 namespace ChipSharp8.ChipSharp8Core
@@ -19,15 +18,10 @@ namespace ChipSharp8.ChipSharp8Core
         public ALU(CPU cpu)
         {
             this.cpu = cpu;
-
             nibble = (byte)(cpu.opcode & 0x000Fu);
-
             x = (byte)((cpu.opcode & 0x0F00u) / 0x100u);
-
             y = (byte)((cpu.opcode & 0x00F0u) / 0x10u);
-
             lowByte = (byte)(cpu.opcode & 0x00FFu);
-
             Console.WriteLine($"DEBUG: address -> 0x{address,0:X3}, nibble -> 0x{nibble,0:X1}, x -> 0x{x,0:X1}, y -> 0x{y,0:X1}, lowByte -> 0x{lowByte,0:X2}");
         }
 
@@ -79,7 +73,6 @@ namespace ChipSharp8.ChipSharp8Core
         public void Opcode2NNN()
         {
             cpu.stack[cpu.stackPointer++] = cpu.programCounter;
-
             cpu.programCounter = GetAddress();
         }
 
@@ -93,7 +86,6 @@ namespace ChipSharp8.ChipSharp8Core
 
         public void Opcode4XKK()
         {
-
             if (cpu.register[GetX()] != GetLowByte())
             {
                 cpu.programCounter += 2;
@@ -102,7 +94,6 @@ namespace ChipSharp8.ChipSharp8Core
 
         public void Opcode5XY0()
         {
-
             if (cpu.register[GetX()] == cpu.register[GetY()])
             {
                 cpu.programCounter += 2;
@@ -202,7 +193,6 @@ namespace ChipSharp8.ChipSharp8Core
             if ((cpu.register[GetX()] & 0x80u) == 0x80u)
             {
                 cpu.register[0xFu] = 1;
-
             }
             else
             {
@@ -234,17 +224,12 @@ namespace ChipSharp8.ChipSharp8Core
             cpu.register[GetX()] = (byte)(rand.Next(0, 256) & GetLowByte());
         }
 
-        public void OpcodeDXYN()    //TODO
+        public void OpcodeDXYN()
         {
-            //debug
-            Console.WriteLine($"{cpu.register[GetX()]}, {cpu.register[GetY()]}");
-
             byte numOfBytes = (byte)(cpu.opcode & GetNibble());
-
             byte mostSignificantBit = 0x80;
 
             int posX = cpu.register[GetX()] % 64;
-
             int posY = cpu.register[GetY()] % 32;
 
             cpu.register[0xFu] = 0;
@@ -258,13 +243,7 @@ namespace ChipSharp8.ChipSharp8Core
                     byte writePixel = (byte)(writeBuffer & (mostSignificantBit >> col));
 
                     int displayX = col + posX;
-
                     int displayY = row + posY;
-
-                    if (cpu.opcode == 0xD671)
-                    {
-                        Console.WriteLine($"row = {row}, posX = {posX}, col = {col}, posY = {posY}");
-                    }
 
                     if (displayX < CPU.maxWidth && displayY < CPU.maxHeight)
                     {
@@ -277,7 +256,6 @@ namespace ChipSharp8.ChipSharp8Core
                         else
                         {
                             cpu.register[0xFu] = 1;
-
                             cpu.display[displayX, displayY] ^= writePixel;
                         }
                     }
@@ -287,28 +265,25 @@ namespace ChipSharp8.ChipSharp8Core
 
         public void OpcodeEX9E()
         {
-            KeyboardState state = Keyboard.GetState();
-            foreach (var key in Renderer._keyboard)
+            bool isKeyPressed = cpu.keyboard[cpu.register[GetX()]];
+
+            if (isKeyPressed)
             {
-                if(state.IsKeyDown(key.Key) && cpu.keyboard[key.Value])
-                {
-                    cpu.programCounter += 2;
-                    break;
-                }
+                cpu.programCounter += 2;
+                cpu.keyboard[cpu.register[GetX()]] = false;
+
+                Console.WriteLine($"EX9E, 0x{cpu.register[GetX()],0:X2}");
             }
         }
 
         public void OpcodeEXA1()
         {
-            KeyboardState state = Keyboard.GetState();
+            bool isKeyPressed = cpu.keyboard[cpu.register[GetX()]];
 
-            foreach (var key in Renderer._keyboard)
+            if (!isKeyPressed)
             {
-                if(!cpu.keyboard[key.Value] || !cpu.keyboard[key.Value])
-                {
-                    cpu.programCounter += 2;
-                    break;
-                }
+                cpu.programCounter += 2;
+                Console.WriteLine($"EXA1, 0x{cpu.register[GetX()],0:X2}");
             }
         }
 
@@ -317,20 +292,23 @@ namespace ChipSharp8.ChipSharp8Core
             cpu.register[GetX()] = cpu.delayTimer;
         }
 
-        public void OpcodeFx0A()
+        public void OpcodeFx0A()    //wait for a key press and a release, if true, set Vx to the value of the key
         {
-            bool isKeyPressed = false;
+            bool isKeyPressed = cpu.keyboard[cpu.register[GetX()]];
 
-            for (byte i = 0; i < CPU.registerSize; i++)
+            Console.WriteLine($"Debug: waiting for key 0x{cpu.register[GetX()]}");
+
+            KeyboardState keyboardState = Keyboard.GetState();
+
+            foreach (var key in Renderer._keyboard)
             {
-                if (cpu.keyboard[i])
+                if (isKeyPressed && keyboardState.IsKeyUp(key.Key))
                 {
-                    cpu.register[GetX()] = i;
-                    isKeyPressed = true;
+                    cpu.register[GetX()] = key.Value;
+                    cpu.keyboard[cpu.register[GetX()]] = false;
                     break;
                 }
             }
-
             if (!isKeyPressed)
             {
                 cpu.programCounter -= 2;
@@ -360,9 +338,7 @@ namespace ChipSharp8.ChipSharp8Core
         public void OpcodeFX33()
         {
             cpu.ram[cpu.indexRegister + 2] = (byte)(cpu.register[GetX()] % 10); //lsb
-
             cpu.ram[cpu.indexRegister + 1] = (byte)(cpu.register[GetX()] % 100 / 10);   //middle
-
             cpu.ram[cpu.indexRegister] = (byte)(cpu.register[GetX()] / 100); //msb
         }
 
