@@ -2,6 +2,7 @@
 
 ##What Works
     ->Only the space invaders rom works. It must run at 100hz or 500hz to accomodate how slow the keyboard responds.
+    ->The enemies appear after being destroyed - TBD
     ->It passes the test_opcode rom.
 
 ##What To Add

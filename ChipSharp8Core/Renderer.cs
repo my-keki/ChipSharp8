@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Runtime.CompilerServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -9,6 +11,7 @@ namespace ChipSharp8.ChipSharp8Core
         private GraphicsDeviceManager _graphics;
         private GraphicsAdapter _graphicsAdapter;
         private SpriteBatch _spriteBatch;
+        private RenderTarget2D _renderTarget;
         private Texture2D _squarePixel;
         private int _scaledX;
         private int _scaledY;
@@ -17,26 +20,27 @@ namespace ChipSharp8.ChipSharp8Core
         public static Dictionary<Keys, byte> _keyboard;
 
         public Renderer()
-        {
+        { 
             _graphics = new GraphicsDeviceManager(this);
             _graphicsAdapter = new GraphicsAdapter();
             _graphics.PreferredBackBufferHeight = _graphicsAdapter.CurrentDisplayMode.Height / 2;
             _graphics.PreferredBackBufferWidth = _graphicsAdapter.CurrentDisplayMode.Width / 2;
             _graphics.IsFullScreen = false;
+
             Content.RootDirectory = "Content";
             IsFixedTimeStep = true;
-            TargetElapsedTime = TimeSpan.FromSeconds(1.0 / 500.0);  //500fps
+            TargetElapsedTime = TimeSpan.FromSeconds(1.0 / 360.0);
             IsMouseVisible = true;
         }
 
         protected override void Initialize()
         {
-            _scaledY = (int)(_graphics.PreferredBackBufferHeight / CPU.maxHeight);
-            _scaledX = (int)(_graphics.PreferredBackBufferWidth / CPU.maxWidth);
+            _scaledY = (int)(_graphics.PreferredBackBufferHeight / CPU.MaxHeight);
+            _scaledX = (int)(_graphics.PreferredBackBufferWidth / CPU.MaxWidth);
 
             Console.WriteLine($"{_scaledX}, {_scaledY}");
 
-            _cpu = new();
+            _cpu = new CPU();
             _alu = new(_cpu);
 
             _keyboard = new Dictionary<Keys, byte>() {
@@ -58,15 +62,33 @@ namespace ChipSharp8.ChipSharp8Core
                 { Keys.V, 15 }
             };
 
-            GraphicsDevice.Clear(Color.Black);
+            _spriteBatch = new SpriteBatch(GraphicsDevice);
             base.Initialize();
         }
 
-        protected override void LoadContent()
+        protected void DrawScreen()
         {
-            _spriteBatch = new SpriteBatch(GraphicsDevice);
-            _squarePixel = new Texture2D(GraphicsDevice, _scaledX, _scaledY);
+            for (int y = 0; y < CPU.MaxHeight; y++)
+            {
+                for (int x = 0; x < CPU.MaxWidth; x++)
+                {
+                    Vector2 position = new Vector2((float)(x * _scaledX), (float)(y * _scaledY));
 
+                    if (_cpu.display[x, y] > 0)
+                    {
+                        _spriteBatch.Draw(CreatePixel(), position, Color.Aquamarine);
+                    }
+                    else
+                    {
+                        _spriteBatch.Draw(CreatePixel(), position, Color.Black);
+                    }
+                }
+            }
+        }
+
+        protected Texture2D CreatePixel()
+        {
+             _squarePixel = new Texture2D(GraphicsDevice, _scaledX, _scaledY);
             Color[] colorData = new Color[_scaledX * _scaledY];
 
             for (int i = 0; i < colorData.Length; i++)
@@ -74,6 +96,12 @@ namespace ChipSharp8.ChipSharp8Core
                 colorData[i] = Color.White;
             }
             _squarePixel.SetData(colorData);
+            return _squarePixel;
+        }
+
+        protected override void LoadContent()
+        {
+        
         }
 
         protected override void Update(GameTime gameTime)
@@ -89,6 +117,8 @@ namespace ChipSharp8.ChipSharp8Core
                     _cpu.keyboard[key.Value] = true;
 
                     Console.WriteLine($"Debug: {key.Key} down -> _cpu.keyboard[0x{key.Value, 0:X2}] {_cpu.keyboard[key.Value]}");
+
+                    break;       
                 }
             }
             base.Update(gameTime);
@@ -100,26 +130,6 @@ namespace ChipSharp8.ChipSharp8Core
             DrawScreen();
             _spriteBatch.End();
             base.Draw(gameTime);
-        }
-
-        private void DrawScreen()
-        {
-            for (int y = 0; y < CPU.maxHeight; y++)
-            {
-                for (int x = 0; x < CPU.maxWidth; x++)
-                {
-                    Vector2 position = new Vector2((float)(x * _scaledX), (float)(y * _scaledY));
-
-                    if (_cpu.display[x, y] > 0)
-                    {
-                        _spriteBatch.Draw(_squarePixel, position, Color.Aquamarine);
-                    }
-                    else
-                    {
-                        _spriteBatch.Draw(_squarePixel, position, Color.Black);
-                    }
-                }
-            }
         }
     }
 }
